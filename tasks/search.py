@@ -33,6 +33,7 @@ def search_keyword(keyword):
                 crawler.info('关键词{}本次搜索更新的微博已经获取完成'.format(keyword))
                 return
             else:
+                wb_data.keyword = keyword
                 insert_weibo_data(wb_data)
                 # 这里暂时使用网络调用而非本地调用，权衡两种方法的好处
                 app.send_task('tasks.user.crawl_person_infos', args=(wb_data.uid,), queue='user_crawler',

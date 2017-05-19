@@ -1,0 +1,1 @@
+ALTER TABLE weibo.weibo_data ADD keyword VARCHAR(200);
