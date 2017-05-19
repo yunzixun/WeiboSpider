@@ -165,6 +165,7 @@
 注意修改Redis的配置文件让它能监听除本机外的别的节点的请求，**建议给Redis设置密码**，如
 果没设置密码，需要关闭保护模式(不推荐，这个**有安全风险**)才能和各个节点通信。如果害怕遇到Redis单点
 故障，可以使用Redis主从配置。
+  - 更新：由于部分朋友对redis的配置特别生疏，我专门写了一篇文章，请点击[wiki](https://github.com/ResolveWang/WeiboSpider/wiki/%E5%88%86%E5%B8%83%E5%BC%8F%E7%88%AC%E8%99%AB%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE)查看
   - 由于**高版本的Celery不支持Windows**,所以请在**类Unix系统**部署。如果实在需要在windows
 上部署的话，可以把Celery版本降为3.1.25: ```pip install celery==3.1.25```，这是
 Celery最后支持的一个windows版本；**特别注意，Windows平台上Celery的定时功能不可用！
@@ -197,7 +198,8 @@ login_first.py```**获取首次登陆的cookie**，需要注意它只会分发�
 ```celery beat -A tasks.workers -l info```，因为beat任务会有一段时间的延迟(比如登录任务会延迟10个小时再执行)，所以通过```python login_first.py```来获取worker
 首次运行需要的cookie是必须的.如果你想马上启动其他任务，而非等第一次定时任务启动，那么可以执行相应的  `*.first.py`，比如我想在worker启动后就执行用户抓取任务，那么就通过
 ```python user_first.py```来执行
-  - 通过*flower*监控节点健康状况：先在任意一个节点，切换到项目根目录，再执行```flower -A tasks.workers```，通过'http://xxxx:5555' 访问所有节点信息，这里的```xxxx```指的是节点的IP
+  - 通过*flower*监控节点健康状况：先在任意一个节点，切换到项目根目录，再执行```flower -A tasks.workers```，通过'http://xxxx:5555' 访问所有节点信息，这里的```xxxx```指的是节点的IP.
+如果需要让外网访问，可以这样`celery -A tasks.workers flower --address=0.0.0.0 --port=5555`
 
 
 - 其它
