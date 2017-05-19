@@ -10,7 +10,7 @@ from db.keywords_wbdata import insert_keyword_wbid
 from db.wb_data import insert_weibo_data, get_wb_by_mid
 
 # 只抓取原创微博，默认是按照时间进行排序，如果只抓首页，那么就不需要登录
-url = 'http://s.weibo.com/weibo/{}&scope=ori&suball=1&page={}'
+url = 'http://s.weibo.com/weibo/{}&xsort=hot&suball=1&page={}'
 limit = get_max_search_page() + 1
 
 
