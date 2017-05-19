@@ -72,7 +72,6 @@ class WeiboData(Base):
     create_time = Column(String(200))
     comment_crawled = Column(INTEGER, default=0)
     repost_crawled = Column(INTEGER, default=0)
-    keyword = Column(String)
 
 
 class KeywordsWbdata(Base):
