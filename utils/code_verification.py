@@ -116,8 +116,8 @@ def code_verificate(name, passwd, file_name, app_id=3510, app_key='7281f8452aa55
 
 if __name__ == '__main__':
     # 云打码注册的登录用户名（通过用户注册）
-    username = 'xxx'
+    username = 'kfeb4'
     # 登录密码
-    password = 'xxx'
+    password = '123456kfeb'
 
     rs = code_verificate(username, password, 'pincode.png')
