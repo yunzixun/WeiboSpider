@@ -13,20 +13,23 @@ base_url = 'http://weibo.com/aj/v6/mblog/info/big?ajwvr=6&id={}&page={}'
 
 
 @app.task(ignore_result=True)
-def crawl_repost_by_page(mid, page_num, root_id):
+def crawl_repost_by_page(mid, page_num, parent_id, root_mid):
     cur_url = base_url.format(mid, page_num)
     html = get_page(cur_url, user_verify=False)
     repost_datas = repost.get_repost_list(html, mid)
 
     for repost_obj in repost_datas:
-        repost_obj.parent_user_id = root_id
+        repost_obj.parent_user_id = parent_id
+        # 增加多级转发任务
+        app.send_task('tasks.repost.crawl_repost_page', args=(mid, repost_obj.user_id, root_mid),
+                      queue='repost_crawler', routing_key='repost_info')
 
     weibo_repost.save_reposts(repost_datas)
     return html, repost_datas
 
 
 @app.task(ignore_result=True)
-def crawl_repost_page(mid, uid):
+def crawl_repost_page(mid, uid, root_mid):
     limit = get_max_repost_page() + 1
     first_repost_data = crawl_repost_by_page(mid, 1)
     wb_data.set_weibo_repost_crawled(mid)
@@ -42,7 +45,7 @@ def crawl_repost_page(mid, uid):
         limit = total_page + 1
     # todo 这里需要衡量是否有用网络调用的必要性
     for page_num in range(2, limit):
-        app.send_task('tasks.comment.crawl_comment_by_page', args=(mid, page_num, uid),
+        app.send_task('tasks.comment.crawl_comment_by_page', args=(mid, page_num, uid, root_mid),
                       queue='comment_page_crawler',
                       routing_key='comment_page_info')
 
@@ -54,5 +57,5 @@ def excute_repost_task():
     crawler.info('本次一共有{}条微博需要抓取转发信息'.format(len(weibo_datas)))
 
     for weibo_data in weibo_datas:
-        app.send_task('tasks.repost.crawl_repost_page', args=(weibo_data.weibo_id, weibo_data.uid),
+        app.send_task('tasks.repost.crawl_repost_page', args=(weibo_data.weibo_id, weibo_data.uid, weibo_data.weibo_id),
                       queue='repost_crawler', routing_key='repost_info')
