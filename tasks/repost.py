@@ -31,7 +31,7 @@ def crawl_repost_by_page(mid, page_num, parent_id, root_mid):
 @app.task(ignore_result=True)
 def crawl_repost_page(mid, uid, root_mid):
     limit = get_max_repost_page() + 1
-    first_repost_data = crawl_repost_by_page(mid, 1)
+    first_repost_data = crawl_repost_by_page(mid, 1, uid, root_mid=root_mid)
     wb_data.set_weibo_repost_crawled(mid)
     total_page = repost.get_total_page(first_repost_data[0])
     repost_datas = first_repost_data[1]
