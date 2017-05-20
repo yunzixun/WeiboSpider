@@ -13,7 +13,6 @@ from page_parse.basic import is_403, is_404, is_complete
 from decorators.decorator import timeout_decorator, timeout
 from config.conf import get_timeout, get_crawl_interal, get_excp_interal, get_max_retries
 
-
 time_out = get_timeout()
 interal = get_crawl_interal()
 max_retries = get_max_retries()
@@ -40,29 +39,13 @@ def get_page(url, user_verify=True, need_login=True):
         if need_login:
             # 每次重试的时候都换cookies,并且和上次不同
             name_cookies = Cookies.fetch_cookies()
-            
+
             if name_cookies is None:
                 crawler.warning('cookie池中不存在cookie，正在检查是否有可用账号')
-                rs = get_login_info()
-
-                if len(rs) == 0:
-                    crawler.error('账号均不可用，请检查账号健康状况')
-                    # 杀死所有关于celery的进程
-                    if 'win32' in sys.platform:
-                        os.popen('taskkill /F /IM "celery*"')
-                    else:
-                        os.popen('pkill -f "celery"')
-                else:
-                    # 如果有可用账号，那么就拿来登录,这里用了本地调用，好像不是很合理，因为如果login queue
-                    # 不会在本机上，那么该调用就会无效但是用网络调用，如何保证不会出现在某些不常用登录地的节点
-                    # 上还有待考量，亦或者找到一个更适合的方法可以突破异地登录的限制
-                    # TODO 衡量是用网络调用还是直接调用 login.get_session()方法，这里应该不是很合理
-                    # 目前暂时不考虑节点登录出现验证码的问题， 考虑到大规模账号登录的话，需要把login_queue的节点放在账号常用地
-                    crawler.info('重新获取cookie中...')
-                    login.excute_login_task()
-                    time.sleep(10)
+                # 这里建议不要尝试登陆账号，因为账号登陆有成本和IP限制
 
             if name_cookies == latest_name_cookies:
+                count += 1  # 只有一个账号或没有账号的时候会陷入死循环，但是这个账号已经获取信息失败，所以多次尝试后退出比较合理
                 continue
 
             latest_name_cookies = name_cookies
@@ -116,5 +99,6 @@ def get_page(url, user_verify=True, need_login=True):
     crawler.warning('抓取{}已达到最大重试次数，请在redis的失败队列中查看该url并检查原因'.format(url))
     Urls.store_crawl_url(url, 0)
     return ''
+
 
 __all__ = ['get_page']

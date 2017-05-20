@@ -9,15 +9,19 @@ from page_get.basic import get_page
 from page_get import user as user_get
 from config.conf import get_max_repost_page
 
-
 base_url = 'http://weibo.com/aj/v6/mblog/info/big?ajwvr=6&id={}&page={}'
 
 
-@app.task
-def crawl_repost_by_page(mid, page_num):
+@app.task(ignore_result=True)
+def crawl_repost_by_page(mid, page_num, root_id):
     cur_url = base_url.format(mid, page_num)
     html = get_page(cur_url, user_verify=False)
     repost_datas = repost.get_repost_list(html, mid)
+
+    for repost_obj in repost_datas:
+        repost_obj.parent_user_id = root_id
+
+    weibo_repost.save_reposts(repost_datas)
     return html, repost_datas
 
 
@@ -32,30 +36,15 @@ def crawl_repost_page(mid, uid):
     if not repost_datas:
         return
 
-    root_user = user_get.get_profile(uid)
+    user_get.get_profile(uid)
 
     if total_page < limit:
         limit = total_page + 1
     # todo 这里需要衡量是否有用网络调用的必要性
     for page_num in range(2, limit):
-        # app.send_task('tasks.comment.crawl_comment_by_page', args=(mid, page_num), queue='comment_page_crawler',
-        #               routing_key='comment_page_info')
-        cur_repost_datas = crawl_repost_by_page(mid, page_num)[1]
-        if cur_repost_datas:
-            repost_datas.extend(cur_repost_datas)
-
-    # 补上user_id，方便可视化
-    for index, repost_obj in enumerate(repost_datas):
-        user_id = IdNames.fetch_uid_by_name(repost_obj.parent_user_name)
-        if not user_id:
-            # 设置成根用户的uid和用户名
-            repost_obj.parent_user_id = root_user.uid
-            repost_obj.parent_user_name = root_user.name
-        else:
-            repost_obj.parent_user_id = user_id
-        repost_datas[index] = repost_obj
-
-    weibo_repost.save_reposts(repost_datas)
+        app.send_task('tasks.comment.crawl_comment_by_page', args=(mid, page_num, uid),
+                      queue='comment_page_crawler',
+                      routing_key='comment_page_info')
 
 
 @app.task(ignore_result=True)
