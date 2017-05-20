@@ -19,7 +19,6 @@ def crawl_comment_by_page(mid, page_num):
     html = get_page(cur_url, user_verify=False)
     comment_datas = comment.get_comment_list(html, mid)
     save_comments(comment_datas)
-    wb_data.set_weibo_comment_crawled(mid)
     return html
 
 
@@ -44,5 +43,6 @@ def excute_comment_task():
     weibo_datas = wb_data.get_weibo_comment_not_crawled()
     crawler.info('本次一共有{}条微博需要抓取评论信息'.format(len(weibo_datas)))
     for weibo_data in weibo_datas:
+        wb_data.set_weibo_comment_crawled(weibo_data.weibo_id)
         app.send_task('tasks.comment.crawl_comment_page', args=(weibo_data.weibo_id,), queue='comment_crawler',
                       routing_key='comment_info')
