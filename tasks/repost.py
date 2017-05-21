@@ -13,7 +13,7 @@ from config.conf import get_max_repost_page
 base_url = 'http://weibo.com/aj/v6/mblog/info/big?ajwvr=6&id={}&page={}'
 
 
-@app.task
+@app.task(ignore_result=True)
 def crawl_repost_by_page(mid, page_num,uid):
     cur_url = base_url.format(mid, page_num)
     html = get_page(cur_url, user_verify=False)

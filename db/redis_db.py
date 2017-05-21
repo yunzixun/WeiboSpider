@@ -1,6 +1,8 @@
 # coding:utf-8
 import datetime
 import json
+import re
+
 import redis
 from config.conf import get_redis_args
 
@@ -10,6 +12,9 @@ redis_args = get_redis_args()
 class Cookies(object):
     rd_con = redis.StrictRedis(host=redis_args.get('host'), port=redis_args.get('port'),
                                password=redis_args.get('password'), db=redis_args.get('cookies'))
+
+    rd_con_broker = redis.StrictRedis(host=redis_args.get('host'), port=redis_args.get('port'),
+                                      password=redis_args.get('password'), db=redis_args.get('broker'))
 
     @classmethod
     def store_cookies(cls, name, cookies):
@@ -27,8 +32,8 @@ class Cookies(object):
                 if j_account:
                     cls.rd_con.lpush('account_queue', name)  # 当账号不存在时，这个name也会清除，并取下一个name
                     account = json.loads(j_account)
-                    loginTime = datetime.datetime.fromtimestamp(account['loginTime'])
-                    if datetime.datetime.now() - loginTime > datetime.timedelta(hours=20):
+                    login_time = datetime.datetime.fromtimestamp(account['loginTime'])
+                    if datetime.datetime.now() - login_time > datetime.timedelta(hours=20):
                         cls.rd_con.hdel('account', name)
                         continue  # 丢弃这个过期账号,account_queue会在下次访问的时候被清除,这里不清除是因为分布式的关系
                     return name, account['cookies']
@@ -37,10 +42,21 @@ class Cookies(object):
 
     @classmethod
     def delete_cookies(cls, name):
-        cls.rd_con.hdel('account',name)
+        cls.rd_con.hdel('account', name)
         return True
 
-
+    @classmethod
+    def check_login_task(cls, name):
+        for i in range(cls.rd_con_broker.llen('login_queue')):
+            login_task = cls.rd_con_broker.lindex('login_queue', i)
+            if login_task:
+                login_task = json.loads(login_task.decode('utf-8'))
+                tname = re.match(r"\('(.*?)',.*\)",login_task['headers']['argsrepr']).groups()
+                if tname[0] == name:
+                    return True
+            else:
+                break
+        return False
 
 
 class Urls(object):
