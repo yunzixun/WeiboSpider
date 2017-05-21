@@ -64,15 +64,16 @@ def get_repost_list(html, mid):
 
             # 把当前转发的用户id和用户名存储到redis中，作为中间结果
             IdNames.store_id_name(wb_repost.user_name, wb_repost.user_id)
-
+            wb_repost.lv = 0
             if not parents:
                 wb_repost.parent_user_name = ''
             else:
                 try:
                     # 第一个即是最上层用户，由于拿不到上层用户的uid，只能拿昵称，但是昵称可以修改，所以入库前还是得把uid拿到
-                    temp = parents.find(attrs={'extra-data': 'type=atname'})
+                    temp = parents.find_all(attrs={'extra-data': 'type=atname'})
                     if temp:
-                        wb_repost.parent_user_name = temp.get('usercard')[5:]
+                        wb_repost.parent_user_name = temp[0].get('usercard')[5:]
+                        wb_repost.lv = len(temp)
                     else:
                         wb_repost.parent_user_name = ''
                 except Exception as e:
