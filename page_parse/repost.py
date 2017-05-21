@@ -1,10 +1,11 @@
 import json
 from bs4 import BeautifulSoup
+from bs4 import NavigableString
+
 from logger.log import parser
 from db.models import WeiboRepost
 from db.redis_db import IdNames
 from decorators.decorator import parse_decorator
-
 
 repost_url = 'http://weibo.com{}'
 
@@ -48,13 +49,13 @@ def get_repost_list(html, mid):
     for repost in reposts:
         wb_repost = WeiboRepost()
         try:
-            repost_cont = repost.find(attrs={'class': 'WB_text'}).find(attrs={'node-type': 'text'}).text.strip().\
+            repost_cont = repost.find(attrs={'class': 'WB_text'}).find(attrs={'node-type': 'text'}).text.strip(). \
                 split('//@')
             wb_repost.repost_cont = repost_cont[0].encode('gbk', 'ignore').decode('gbk', 'ignore')
             wb_repost.weibo_id = repost['mid']
             # TODO 将wb_repost.user_id加入待爬队列（seed_ids）
             wb_repost.user_id = repost.find(attrs={'class': 'WB_face W_fl'}).find('a').get('usercard')[3:]
-            wb_repost.user_name = repost.find(attrs={'class': 'list_con'}).find(attrs={'class': 'WB_text'}).find('a').\
+            wb_repost.user_name = repost.find(attrs={'class': 'list_con'}).find(attrs={'class': 'WB_text'}).find('a'). \
                 text
             wb_repost.repost_time = repost.find(attrs={'class': 'WB_from S_txt2'}).find('a').get('title')
             wb_repost.weibo_url = repost_url.format(repost.find(attrs={'class': 'WB_from S_txt2'}).find('a').
@@ -65,6 +66,16 @@ def get_repost_list(html, mid):
             # 把当前转发的用户id和用户名存储到redis中，作为中间结果
             IdNames.store_id_name(wb_repost.user_name, wb_repost.user_id)
             wb_repost.lv = 0
+            repost_count = repost.find('a', attrs={'action-type': "feed_list_forward"}).text.split(' ')  # 转发 322
+            if len(repost_count) > 1:
+                wb_repost.repost_count = int(repost_count[1])
+            else:
+                wb_repost.repost_count = 0
+            like = repost.find('span', attrs={'node-type': "like_status"}).find_all('em')[1]
+            if like.text != '赞':
+                wb_repost.like = int(like.text)
+            else:
+                wb_repost.like = 0
             if not parents:
                 wb_repost.parent_user_name = ''
             else:
@@ -72,8 +83,12 @@ def get_repost_list(html, mid):
                     # 第一个即是最上层用户，由于拿不到上层用户的uid，只能拿昵称，但是昵称可以修改，所以入库前还是得把uid拿到
                     temp = parents.find_all(attrs={'extra-data': 'type=atname'})
                     if temp:
-                        wb_repost.parent_user_name = temp[0].get('usercard')[5:]
-                        wb_repost.lv = len(temp)
+                        for node in temp:
+                            if isinstance(node.previous, NavigableString):
+                                node.previous.endswith('//')
+                                if not wb_repost.parent_user_name:
+                                    wb_repost.parent_user_name = temp[0].get('usercard')[5:]
+                                wb_repost.lv += 1
                     else:
                         wb_repost.parent_user_name = ''
                 except Exception as e:

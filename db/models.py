@@ -110,6 +110,8 @@ class WeiboRepost(Base):
     parent_user_name = Column(String(200))
     root_weibo_id = Column(String(200))
     lv = Column(INTEGER)
+    like = Column(INTEGER)
+    repost_count = Column(INTEGER)
 
 
     def __repr__(self):
