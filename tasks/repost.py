@@ -8,7 +8,7 @@ from db.redis_db import IdNames
 from page_get.basic import get_page
 from page_get import user as user_get
 from config.conf import get_max_repost_page
-
+from page_get.user import get_profile
 
 base_url = 'http://weibo.com/aj/v6/mblog/info/big?ajwvr=6&id={}&page={}'
 
@@ -22,6 +22,7 @@ def crawl_repost_by_page(mid, page_num,uid):
     root_user = user_get.get_profile(uid)
 
     for index, repost_obj in enumerate(repost_datas):
+        get_profile(repost_obj.user_id)
         user_id = IdNames.fetch_uid_by_name(repost_obj.parent_user_name)
         if not user_id:
             # 设置成根用户的uid和用户名
