@@ -48,9 +48,9 @@ def crawl_repost_page(mid, uid, root_mid):
     if total_page < limit:
         limit = total_page + 1
     for page_num in range(2, limit):
-        app.send_task('tasks.comment.crawl_comment_by_page', args=(mid, page_num, uid, root_mid),
-                      queue='comment_page_crawler',
-                      routing_key='comment_page_info')
+        app.send_task('tasks.repost.crawl_repost_by_page', args=(mid, page_num, uid, root_mid),
+                      queue='repost_page_crawler',
+                      routing_key='repost_page_info')
 
 
 @app.task(ignore_result=True)
