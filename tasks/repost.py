@@ -13,7 +13,7 @@ base_url = 'http://weibo.com/aj/v6/mblog/info/big?ajwvr=6&id={}&page={}'
 
 
 @app.task(ignore_result=True)
-def crawl_repost_by_page(mid, page_num, parent_user_id, root_mid):
+def crawl_repost_by_page(mid, page_num, parent_user_id, root_mid, lv):
     cur_url = base_url.format(mid, page_num)
     html = get_page(cur_url, user_verify=False)
     repost_datas = repost.get_repost_list(html, mid)
@@ -21,9 +21,11 @@ def crawl_repost_by_page(mid, page_num, parent_user_id, root_mid):
     for repost_obj in repost_datas:
         repost_obj.parent_user_id = parent_user_id
         repost_obj.parent_weibo_id = mid
+        repost_obj.lv = lv
         # 增加多级转发任务
         crawler.info("新加入次级转发任务:{}".format(repost_obj.weibo_id))
-        app.send_task('tasks.repost.crawl_repost_page', args=(repost_obj.weibo_id, repost_obj.user_id, root_mid),
+        app.send_task('tasks.repost.crawl_repost_page',
+                      args=(repost_obj.weibo_id, repost_obj.user_id, root_mid, lv + 1),
                       queue='repost_crawler', routing_key='repost_info')
 
     weibo_repost.save_reposts(repost_datas)
@@ -31,13 +33,13 @@ def crawl_repost_by_page(mid, page_num, parent_user_id, root_mid):
 
 
 @app.task(ignore_result=True)
-def crawl_repost_page(mid, uid, root_mid):
+def crawl_repost_page(mid, uid, root_mid, lv):
     if wb_data.check_weibo_repost_crawled(mid):
         return
     wb_data.set_weibo_repost_crawled(mid)
 
     limit = get_max_repost_page() + 1
-    first_repost_data = crawl_repost_by_page(mid, 1, uid, root_mid=root_mid)
+    first_repost_data = crawl_repost_by_page(mid, 1, uid, root_mid=root_mid, lv=lv)
     wb_data.set_weibo_repost_crawled(mid)
     total_page = repost.get_total_page(first_repost_data[0])
     repost_datas = first_repost_data[1]
@@ -50,7 +52,7 @@ def crawl_repost_page(mid, uid, root_mid):
     if total_page < limit:
         limit = total_page + 1
     for page_num in range(2, limit):
-        app.send_task('tasks.repost.crawl_repost_by_page', args=(mid, page_num, uid, root_mid),
+        app.send_task('tasks.repost.crawl_repost_by_page', args=(mid, page_num, uid, root_mid, lv),
                       queue='repost_page_crawler',
                       routing_key='repost_page_info')
 
@@ -62,5 +64,6 @@ def excute_repost_task():
     crawler.info('本次一共有{}条微博需要抓取转发信息'.format(len(weibo_datas)))
 
     for weibo_data in weibo_datas:
-        app.send_task('tasks.repost.crawl_repost_page', args=(weibo_data.weibo_id, weibo_data.uid, weibo_data.weibo_id),
+        app.send_task('tasks.repost.crawl_repost_page',
+                      args=(weibo_data.weibo_id, weibo_data.uid, weibo_data.weibo_id, 1),
                       queue='repost_crawler', routing_key='repost_info')
