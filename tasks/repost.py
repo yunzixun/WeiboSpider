@@ -13,15 +13,17 @@ base_url = 'http://weibo.com/aj/v6/mblog/info/big?ajwvr=6&id={}&page={}'
 
 
 @app.task(ignore_result=True)
-def crawl_repost_by_page(mid, page_num, parent_id, root_mid):
+def crawl_repost_by_page(mid, page_num, parent_user_id, root_mid):
     cur_url = base_url.format(mid, page_num)
     html = get_page(cur_url, user_verify=False)
     repost_datas = repost.get_repost_list(html, mid)
 
     for repost_obj in repost_datas:
-        repost_obj.parent_user_id = parent_id
+        repost_obj.parent_user_id = parent_user_id
+        repost_obj.parent_weibo_id = mid
         # 增加多级转发任务
-        app.send_task('tasks.repost.crawl_repost_page', args=(mid, repost_obj.user_id, root_mid),
+        crawler.info("新加入次级转发任务:{}".format(repost_obj.weibo_id))
+        app.send_task('tasks.repost.crawl_repost_page', args=(repost_obj.weibo_id, repost_obj.user_id, root_mid),
                       queue='repost_crawler', routing_key='repost_info')
 
     weibo_repost.save_reposts(repost_datas)
@@ -62,4 +64,3 @@ def excute_repost_task():
     for weibo_data in weibo_datas:
         app.send_task('tasks.repost.crawl_repost_page', args=(weibo_data.weibo_id, weibo_data.uid, weibo_data.weibo_id),
                       queue='repost_crawler', routing_key='repost_info')
-
