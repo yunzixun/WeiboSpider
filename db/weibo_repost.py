@@ -27,3 +27,6 @@ def get_repost_by_rid(rid):
     :return: 
     """
     return db_session.query(WeiboRepost).filter(WeiboRepost.weibo_id == rid).first()
+
+def get_repost_uid():
+    return db_session.query(WeiboRepost.user_id).all()

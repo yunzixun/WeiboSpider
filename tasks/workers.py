@@ -9,8 +9,8 @@ from celery import platforms
 # 允许celery以root身份启动
 platforms.C_FORCE_ROOT = True
 
-worker_log_path = os.path.join(os.path.dirname(os.path.dirname(__file__))+'/logs', 'celery.log')
-beat_log_path = os.path.join(os.path.dirname(os.path.dirname(__file__))+'/logs', 'beat.log')
+worker_log_path = os.path.join(os.path.dirname(os.path.dirname(__file__)) + '/logs', 'celery.log')
+beat_log_path = os.path.join(os.path.dirname(os.path.dirname(__file__)) + '/logs', 'beat.log')
 
 tasks = ['tasks.login', 'tasks.user', 'tasks.search', 'tasks.home', 'tasks.comment', 'tasks.repost']
 
@@ -61,6 +61,9 @@ app.conf.update(
         Queue('login_queue', exchange=Exchange('login', type='direct'), routing_key='for_login'),
 
         Queue('user_crawler', exchange=Exchange('user_info', type='direct'), routing_key='for_user_info'),
+        Queue('user_profile_crawler', exchange=Exchange('user_profile_info', type='direct'),
+              routing_key='for_user_profile_info'),
+
         Queue('search_crawler', exchange=Exchange('search_info', type='direct'), routing_key='for_search_info'),
         Queue('fans_followers', exchange=Exchange('fans_followers', type='direct'), routing_key='for_fans_followers'),
 
@@ -76,5 +79,3 @@ app.conf.update(
               routing_key='repost_page_info'),
     )
 )
-
-

@@ -37,6 +37,19 @@ def crawl_person_infos(uid):
     app.send_task('tasks.user.crawl_follower_fans', args=(uid,), queue='fans_followers',
                   routing_key='for_fans_followers')
 
+@app.task(ignore_result=True)
+def crawl_person_profile_infos(uid):
+    """
+    根据用户id来爬取用户相关资料和用户的关注数和粉丝数（由于微博服务端限制，默认爬取前五页，企业号的关注和粉丝也不能查看）
+    :param uid: 用户id
+    :return:
+    """
+    if not uid:
+        return
+    user_get.get_profile(uid)
+
+
+
 
 @app.task(ignore_result=True)
 def excute_user_task():
@@ -45,5 +58,15 @@ def excute_user_task():
         for seed in seeds:
             app.send_task('tasks.user.crawl_person_infos', args=(seed.uid,), queue='user_crawler',
                           routing_key='for_user_info')
+
+
+@app.task(ignore_result=True)
+def excute_user_profile_task():
+    from db.weibo_repost import get_repost_uid
+    seeds = get_repost_uid()
+    if seeds:
+        for seed in seeds:
+            app.send_task('tasks.user.crawl_person_profile_infos', args=seed, queue='user_profile_crawler',
+                          routing_key='or_user_profile_info')
 
 

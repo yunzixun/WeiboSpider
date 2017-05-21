@@ -21,6 +21,11 @@ class Cookies(object):
         pickled_cookies = json.dumps(
             {'cookies': cookies, 'loginTime': datetime.datetime.now().timestamp()})
         cls.rd_con.hset('account', name, pickled_cookies)
+        for i in range(cls.rd_con.llen('account_queue')):
+            tn = cls.rd_con.lindex('account_queue',i)
+            if tn:
+                if tn.decode('utf-8') == name:
+                    return  # 简单的筛选一下，在节点数和任务执行较快的情况下，并不能保证队列中无重复名字
         cls.rd_con.lpush('account_queue', name)
 
     @classmethod
