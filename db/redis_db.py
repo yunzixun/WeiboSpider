@@ -14,29 +14,33 @@ class Cookies(object):
     @classmethod
     def store_cookies(cls, name, cookies):
         pickled_cookies = json.dumps(
-            {'name': name, 'cookies': cookies, 'loginTime': datetime.datetime.now().timestamp()})
-        cls.rd_con.lpush('account', pickled_cookies)
-        # 为cookie设置过期时间，防止某些账号登录失败，还会获取到失效cookie
-        cls.rd_con.expire(name, 20 * 60 * 60)
+            {'cookies': cookies, 'loginTime': datetime.datetime.now().timestamp()})
+        cls.rd_con.hset('account', name, pickled_cookies)
+        cls.rd_con.lpush('account_queue', name)
 
     @classmethod
     def fetch_cookies(cls):
-        for i in range(cls.rd_con.llen('account')):
-            j_account = cls.rd_con.rpop('account').decode('utf-8')
-            if j_account:
-                account = json.loads(j_account)
-                loginTime = datetime.datetime.fromtimestamp(account['loginTime'])
-                if datetime.datetime.now() - loginTime > datetime.timedelta(hours=20):
-                    continue  # 丢弃这个过期账号
-                cls.rd_con.lpush('account', j_account)
-                return account['name'], json.loads(account['cookies'])
+        for i in range(cls.rd_con.llen('account_queue')):
+            name = cls.rd_con.rpop('account_queue').decode('utf-8')
+            if name:
+                j_account = cls.rd_con.hget('account', name)
+                if j_account:
+                    cls.rd_con.lpush('account_queue', name)  # 当账号不存在时，这个name也会清除，并取下一个name
+                    account = json.loads(j_account)
+                    loginTime = datetime.datetime.fromtimestamp(account['loginTime'])
+                    if datetime.datetime.now() - loginTime > datetime.timedelta(hours=20):
+                        cls.rd_con.hdel('account', name)
+                        continue  # 丢弃这个过期账号
+                    return name, account['cookies']
             else:
                 return None
 
     @classmethod
     def delete_cookies(cls, name):
-        cls.rd_con.delete(name)
+        cls.rd_con.hdel('account',name)
         return True
+
+
 
 
 class Urls(object):
