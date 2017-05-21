@@ -30,6 +30,10 @@ def crawl_repost_by_page(mid, page_num, parent_id, root_mid):
 
 @app.task(ignore_result=True)
 def crawl_repost_page(mid, uid, root_mid):
+    if wb_data.check_weibo_repost_crawled(mid):
+        return
+    wb_data.set_weibo_repost_crawled(mid)
+
     limit = get_max_repost_page() + 1
     first_repost_data = crawl_repost_by_page(mid, 1, uid, root_mid=root_mid)
     wb_data.set_weibo_repost_crawled(mid)
@@ -43,7 +47,6 @@ def crawl_repost_page(mid, uid, root_mid):
 
     if total_page < limit:
         limit = total_page + 1
-    # todo 这里需要衡量是否有用网络调用的必要性
     for page_num in range(2, limit):
         app.send_task('tasks.comment.crawl_comment_by_page', args=(mid, page_num, uid, root_mid),
                       queue='comment_page_crawler',
@@ -57,6 +60,6 @@ def excute_repost_task():
     crawler.info('本次一共有{}条微博需要抓取转发信息'.format(len(weibo_datas)))
 
     for weibo_data in weibo_datas:
-        wb_data.set_weibo_repost_crawled(weibo_data.weibo_id)
         app.send_task('tasks.repost.crawl_repost_page', args=(weibo_data.weibo_id, weibo_data.uid, weibo_data.weibo_id),
                       queue='repost_crawler', routing_key='repost_info')
+

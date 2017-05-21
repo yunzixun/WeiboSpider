@@ -1,8 +1,8 @@
 # coding:utf-8
+import datetime
 import json
 import redis
 from config.conf import get_redis_args
-
 
 redis_args = get_redis_args()
 
@@ -13,18 +13,25 @@ class Cookies(object):
 
     @classmethod
     def store_cookies(cls, name, cookies):
-        pickled_cookies = json.dumps(cookies)
-        cls.rd_con.set(name, pickled_cookies)
+        pickled_cookies = json.dumps(
+            {'name': name, 'cookies': cookies, 'loginTime': datetime.datetime.now().timestamp()})
+        cls.rd_con.lpush('account', pickled_cookies)
         # 为cookie设置过期时间，防止某些账号登录失败，还会获取到失效cookie
         cls.rd_con.expire(name, 20 * 60 * 60)
 
     @classmethod
     def fetch_cookies(cls):
-        random_name = cls.rd_con.randomkey()
-        if random_name:
-            return random_name.decode('utf-8'), json.loads(cls.rd_con.get(random_name).decode('utf-8'))
-        else:
-            return None
+        for i in range(cls.rd_con.llen('account')):
+            j_account = cls.rd_con.rpop('account').decode('utf-8')
+            if j_account:
+                account = json.loads(j_account)
+                loginTime = datetime.datetime.fromtimestamp(account['loginTime'])
+                if datetime.datetime.now() - loginTime > datetime.timedelta(hours=20):
+                    continue  # 丢弃这个过期账号
+                cls.rd_con.lpush('account', j_account)
+                return account['name'], json.loads(account['cookies'])
+            else:
+                return None
 
     @classmethod
     def delete_cookies(cls, name):
