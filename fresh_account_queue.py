@@ -1,3 +1,7 @@
-from db.redis_db import Cookies
+import sys
 
-Cookies.fresh_login_queue(20)
+sys.path.append('/'.join(sys.path[0].split('/')))
+
+from db.redis_db import Cookies
+print("刷新账号队列")
+Cookies.fresh_login_queue(10)

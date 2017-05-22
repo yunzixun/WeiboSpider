@@ -74,7 +74,7 @@ def set_weibo_repost_crawled(mid):
 
 def check_weibo_repost_crawled(mid):
     wbdt = db_session.query(WeiboData).filter(WeiboData.weibo_id == mid).one()
-    return wbdt.repost_crawled == '1'
+    return wbdt.repost_crawled == 1
 
 
 def check_weibo_comment_crawled(mid):
