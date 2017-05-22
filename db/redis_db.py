@@ -32,7 +32,7 @@ class Cookies(object):
     def fetch_cookies(cls):
         while True:
 
-            name = cls.rd_con.brpop('account_queue').decode('utf-8')
+            name = cls.rd_con.brpop('account_queue')[1].decode('utf-8')
             if name:
                 j_account = cls.rd_con.hget('account', name).decode('utf-8')
                 if j_account:
