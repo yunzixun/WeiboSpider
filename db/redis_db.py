@@ -31,7 +31,7 @@ class Cookies(object):
     @classmethod
     def fetch_cookies(cls):
         for i in range(cls.rd_con.llen('account_queue')):
-            name = cls.rd_con.brpop('account_queue').decode('utf-8')
+            name = cls.rd_con.rpop('account_queue').decode('utf-8')
             if name:
                 j_account = cls.rd_con.hget('account', name).decode('utf-8')
                 if j_account:
