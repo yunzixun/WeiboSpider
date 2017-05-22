@@ -1,7 +1,7 @@
 # coding:utf-8
 from sqlalchemy import text
 from db.basic_db import db_session
-from db.models import WeiboData
+from db.models import WeiboData, WeiboRepost
 from decorators.decorator import db_commit_decorator
 
 
@@ -49,6 +49,15 @@ def get_weibo_comment_not_crawled():
 def get_weibo_repost_not_crawled():
     return db_session.query(WeiboData.weibo_id, WeiboData.uid).filter(text('repost_crawled=0')).all()
 
+def get_weibo_repost_not_full_crawled():
+    wbdata = db_session.query(WeiboData.weibo_id,WeiboData.uid,WeiboData.repost_num).all()
+    res = []
+    for wb in wbdata:
+        hasc = db_session.query(WeiboRepost).filter(WeiboRepost.root_weibo_id==wb.weibo_id).count()
+        if wb.repost_num>100:
+            if hasc/wb.repost_num<0.8:
+                res.append(wb)
+    return res
 
 @db_commit_decorator
 def set_weibo_repost_crawled(mid):

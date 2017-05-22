@@ -22,7 +22,7 @@ class Cookies(object):
             {'cookies': cookies, 'loginTime': datetime.datetime.now().timestamp()})
         cls.rd_con.hset('account', name, pickled_cookies)
         for i in range(cls.rd_con.llen('account_queue')):
-            tn = cls.rd_con.lindex('account_queue',i)
+            tn = cls.rd_con.lindex('account_queue', i)
             if tn:
                 if tn.decode('utf-8') == name:
                     return  # 简单的筛选一下，在节点数和任务执行较快的情况下，并不能保证队列中无重复名字
@@ -31,7 +31,7 @@ class Cookies(object):
     @classmethod
     def fetch_cookies(cls):
         for i in range(cls.rd_con.llen('account_queue')):
-            name = cls.rd_con.rpop('account_queue').decode('utf-8')
+            name = cls.rd_con.brpop('account_queue').decode('utf-8')
             if name:
                 j_account = cls.rd_con.hget('account', name).decode('utf-8')
                 if j_account:
@@ -56,12 +56,19 @@ class Cookies(object):
             login_task = cls.rd_con_broker.lindex('login_queue', i)
             if login_task:
                 login_task = json.loads(login_task.decode('utf-8'))
-                tname = re.match(r"\('(.*?)',.*\)",login_task['headers']['argsrepr']).groups()
+                tname = re.match(r"\('(.*?)',.*\)", login_task['headers']['argsrepr']).groups()
                 if tname[0] == name:
                     return True
             else:
                 break
         return False
+
+    @classmethod
+    def fresh_login_queue(cls, num):
+        for key in cls.rd_con.hkeys('account'):
+            if cls.rd_con.llen('account_queue') > num:
+                break  # 保持cookies池数量
+            cls.rd_con.lpush('account_queue', key)
 
 
 class Urls(object):

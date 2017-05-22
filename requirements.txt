@@ -1,3 +1,4 @@
+xlwt
 bs4==0.0.1
 PyYAML==3.12
 requests==2.13.0
