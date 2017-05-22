@@ -89,7 +89,8 @@ if __name__ == '__main__':
                     WeiboRepost.lv == 3).count()
                 lv5 = db_session.query(WeiboRepost).filter(WeiboRepost.root_weibo_id == wb.weibo_id).filter(
                     WeiboRepost.lv > 3).count()
-                lv1 = wb.repost_num - lv2 - lv3 - lv4 - lv5
+                lv1 = db_session.query(WeiboRepost).filter(WeiboRepost.root_weibo_id == wb.weibo_id).filter(
+                    WeiboRepost.lv == 0 ).count()
                 ws.write(j, keyindex['第一层转发'], lv1)
                 ws.write(j, keyindex['第二层转发'], lv2)
                 ws.write(j, keyindex['第三层转发'], lv3)
