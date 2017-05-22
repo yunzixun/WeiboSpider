@@ -40,6 +40,7 @@ def get_page(url, user_verify=True, need_login=True):
             # 每次重试的时候都换cookies,并且和上次不同
             crawler.info('阻塞获取cookies')
             name_cookies = Cookies.fetch_cookies()
+            crawler.info('获取cookies成功')
 
             if name_cookies is None:
                 crawler.warning('cookie池中不存在cookie，正在检查是否有可用账号')
