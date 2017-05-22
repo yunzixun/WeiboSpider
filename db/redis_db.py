@@ -5,6 +5,7 @@ import re
 
 import redis
 from config.conf import get_redis_args
+from logger.log import crawler
 
 redis_args = get_redis_args()
 
@@ -31,11 +32,12 @@ class Cookies(object):
     @classmethod
     def fetch_cookies(cls):
         while True:
-
             name = cls.rd_con.brpop('account_queue')[1].decode('utf-8')
+            crawler.info('获取用户名{}'.format(name))
             if name:
                 j_account = cls.rd_con.hget('account', name).decode('utf-8')
                 if j_account:
+                    crawler.info('获取 {} 的cookies'.format(name))
                     cls.rd_con.lpush('account_queue', name)  # 当账号不存在时，这个name也会清除，并取下一个name
                     account = json.loads(j_account)
                     login_time = datetime.datetime.fromtimestamp(account['loginTime'])
@@ -43,6 +45,9 @@ class Cookies(object):
                         cls.rd_con.hdel('account', name)
                         continue  # 丢弃这个过期账号,account_queue会在下次访问的时候被清除,这里不清除是因为分布式的关系
                     return name, account['cookies']
+                else:
+                    crawler.info('获取 {} 的cookies失败'.format(name))
+
             else:
                 return None
 
