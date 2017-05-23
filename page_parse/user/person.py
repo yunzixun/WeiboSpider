@@ -1,6 +1,8 @@
 # -*-coding:utf-8 -*-
 # 个人用户个人资料页
 from bs4 import BeautifulSoup
+
+from db.user import save_user
 from page_parse.user import public
 from decorators.decorator import parse_decorator
 from db.models import User
@@ -88,7 +90,8 @@ def get_detail(html):
                         description = each.find(attrs={'class': 'pt_detail'}).get_text()
                         user.description = description.encode('gbk', 'ignore').decode('gbk')
                     elif '注册时间：' in each_str:
-                        user.register_time = each.find(attrs={'class': 'pt_detail'}).get_text().replace('\t', '').replace(
+                        user.register_time = each.find(attrs={'class': 'pt_detail'}).get_text().replace('\t',
+                                                                                                        '').replace(
                             '\r\n', '')
 
             if '标签信息' in basic_str:
@@ -96,7 +99,7 @@ def get_detail(html):
                 for each in basic_info:
                     if '标签：' in each.get_text():
                         user.tags = each.find(attrs={'class': 'pt_detail'}).get_text().replace('\t', '').replace(
-                            '\n\n\n', '') .strip().replace('\r\n', ';')
+                            '\n\n\n', '').strip().replace('\r\n', ';')
 
             if '教育信息' in basic_str:
                 basic_info = each_module.find_all(attrs={'class': 'li_1 clearfix'})
@@ -131,3 +134,20 @@ def get_detail(html):
             print('解析出错，具体原因为{why}'.format(why=why))
 
     return user
+
+
+def simple_save_user_info(name, uid, addition):
+    # 获取简单的用户认证信息并保存
+    user = User()
+    user.name = name
+    user.uid = uid
+
+    soup = BeautifulSoup(addition, 'html.parser')
+    pv = soup.find_all({'class': 'W_icon icon_approve_gold'})
+    user.verify_type = 0
+    if len(pv):
+        user.verify_type = 1
+    bv = soup.find_all({'class': 'W_icon icon_approve_co'})
+    if len(bv):
+        user.verify_type = 2
+    save_user(user)

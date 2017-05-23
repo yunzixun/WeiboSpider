@@ -21,7 +21,7 @@ def crawl_repost_by_page(mid, page_num,uid):
 
     root_user = user_get.get_profile(uid)
 
-    for index, repost_obj in enumerate(repost_datas):
+    for repost_obj in repost_datas:
         get_profile(repost_obj.user_id)
         user_id = IdNames.fetch_uid_by_name(repost_obj.parent_user_name)
         if not user_id:
@@ -30,7 +30,6 @@ def crawl_repost_by_page(mid, page_num,uid):
             repost_obj.parent_user_name = root_user.name
         else:
             repost_obj.parent_user_id = user_id
-        repost_datas[index] = repost_obj
 
     weibo_repost.save_reposts(repost_datas)
 

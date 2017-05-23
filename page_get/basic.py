@@ -21,8 +21,8 @@ excp_interal = get_excp_interal()
 
 # 每次抓取都从redis中随机取一个cookie以降低被封号的危险，但是还没验证不同ip对账号的影响
 # todo 验证代理ip使用cookie访问用户信息会不会出现验证码
-@timeout(200)
-@timeout_decorator
+# @timeout(200)
+# @timeout_decorator
 def get_page(url, user_verify=True, need_login=True):
     """
     :param url: 待出现

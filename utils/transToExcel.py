@@ -68,7 +68,8 @@ if __name__ == '__main__':
     workbook = xlwt.Workbook()
     ws = build_init_sheet(workbook.add_sheet('统计'))
     j = 1
-    for keyword in db_session.query(KeyWords).all():
+    keywords = db_session.query(KeyWords).filter(KeyWords.keyword == '曼彻斯特爆炸').all()
+    for keyword in keywords:
         for wbid in db_session.query(KeywordsWbdata.wb_id).filter(KeywordsWbdata.keyword_id == keyword.id).all():
             for wb in db_session.query(WeiboData).filter(WeiboData.weibo_id == wbid[0]).all():
                 user = db_session.query(User).filter(User.uid == wb.uid).one()
@@ -90,7 +91,7 @@ if __name__ == '__main__':
                 lv5 = db_session.query(WeiboRepost).filter(WeiboRepost.root_weibo_id == wb.weibo_id).filter(
                     WeiboRepost.lv > 3).count()
                 lv1 = db_session.query(WeiboRepost).filter(WeiboRepost.root_weibo_id == wb.weibo_id).filter(
-                    WeiboRepost.lv == 0 ).count()
+                    WeiboRepost.lv == 0).count()
                 ws.write(j, keyindex['第一层转发'], lv1)
                 ws.write(j, keyindex['第二层转发'], lv2)
                 ws.write(j, keyindex['第三层转发'], lv3)

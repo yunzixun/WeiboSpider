@@ -2,10 +2,12 @@ import json
 from bs4 import BeautifulSoup
 from bs4 import NavigableString
 
+from db.user import get_user_by_uid
 from logger.log import parser
 from db.models import WeiboRepost
 from db.redis_db import IdNames
 from decorators.decorator import parse_decorator
+from page_parse.user.person import simple_save_user_info
 
 repost_url = 'http://weibo.com{}'
 
@@ -28,6 +30,8 @@ def get_total_page(html):
         page_count = 1
 
     return page_count
+
+
 
 
 @parse_decorator(2)
@@ -55,6 +59,9 @@ def get_repost_list(html, mid):
             wb_repost.weibo_id = repost['mid']
             # TODO 将wb_repost.user_id加入待爬队列（seed_ids）
             wb_repost.user_id = repost.find(attrs={'class': 'WB_face W_fl'}).find('a').get('usercard')[3:]
+            # TODO: 尝试获取用户信息,当在数据库内，则不动，当数据库中没有的时候，增加一条并将相关信息录入
+            # if not get_user_by_uid(wb_repost.user_id):
+            #     simple_save_user_info(wb_repost.user_name,wb_repost.user_id,repost)
             wb_repost.user_name = repost.find(attrs={'class': 'list_con'}).find(attrs={'class': 'WB_text'}).find('a'). \
                 text
             wb_repost.repost_time = repost.find(attrs={'class': 'WB_from S_txt2'}).find('a').get('title')
