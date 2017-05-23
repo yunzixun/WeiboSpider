@@ -20,19 +20,18 @@ excp_interal = get_excp_interal()
 
 
 # 每次抓取都从redis中随机取一个cookie以降低被封号的危险，但是还没验证不同ip对账号的影响
-# todo 验证代理ip使用cookie访问用户信息会不会出现验证码
-# @timeout(200)
-# @timeout_decorator
+
+@timeout(200)
+@timeout_decorator
 def get_page(url, user_verify=True, need_login=True):
     """
-    :param url: 待出现
+    :param url: 待抓取url
     :param user_verify: 是否为可能出现验证码的页面(ajax连接不会出现验证码，如果是请求微博或者用户信息可能出现验证码)，否为抓取转发的ajax连接
     :param need_login: 抓取页面是否需要登录，这样做可以减小一些账号的压力
     :return: 返回请求的数据，如果出现404或者403,或者是别的异常，都返回空字符串
     """
     crawler.info('本次抓取的url为{url}'.format(url=url))
     count = 0
-    latest_name_cookies = None
 
     while count < max_retries:
 
@@ -51,6 +50,7 @@ def get_page(url, user_verify=True, need_login=True):
                 continue
 
             latest_name_cookies = name_cookies
+
 
         try:
             if need_login:

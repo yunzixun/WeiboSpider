@@ -12,6 +12,8 @@ create table weibo.keywords
 comment '搜索关键词表'
 ;
 
+
+
 create table weibo.keywords_wbdata
 (
 	id int not null auto_increment

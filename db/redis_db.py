@@ -38,6 +38,7 @@ class Cookies(object):
                 j_account = cls.rd_con.hget('account', name).decode('utf-8')
                 if j_account:
                     crawler.info('获取 {} 的cookies'.format(name))
+
                     cls.rd_con.lpush('account_queue', name)  # 当账号不存在时，这个name也会清除，并取下一个name
                     account = json.loads(j_account)
                     login_time = datetime.datetime.fromtimestamp(account['loginTime'])

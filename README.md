@@ -9,8 +9,6 @@
 *从单机到分布式迁移*都做了大量的工作和反复测试，花了我绝大部分业余的时间。
 - 本项目不会承诺每天能抓到多少数据，因为**数据量的大小很大程度上取决于用户可用微博账户的数量**
 - 与该项目类似的项目大概有[SinaSpider](https://github.com/LiuXingMing/SinaSpider),[weibo_terminater](https://github.com/jinfagang/weibo_terminater)。
-前者是一个基于```scrapy```的项目，爬的是移动版微博用户信息，质量还不错；后者嘛，还是留给用户
-自己判断吧。
 
 ## 你可以用它来干嘛 :u6709:
 - **爬虫进阶学习**，对于需要学习Python进阶和爬虫的同学来说，都可以读读源码
@@ -91,20 +89,24 @@
     config/
         sql/
             spider.sql      # 项目所用表
+            create_all.py   # 可直接运行该文件生成项目所需要的数据表
         __init__.py
         conf.py             # 获取配置文件的信息
         spider.yaml         # 配置文件信息，包括Mysql配置、Redis配置和一些抓取参数设定
     db/
         __init__.py
         basic_db.py         # 数据库元操作
+        keywords_wbdata.py  # 关键词_微博数据关联表
         login_info.py       # 微博账号管理操作
         models.py           # sqlalchemy中用到的models
         redis_db.py         # redis相关操作
         search_words.py     # 搜索话题相关操作
         seed_ids.py         # 种子用户id管理操作
+        tables.py           # 数据库对应的表
         user.py             # 微博用户相关操作
         wb_data.py          # 微博数据相关操作
         weibo_comment.py    # 微博评论相关操作
+        weibo_repost.py     # 微博转发相关操作
     decorators/
         __init__.py
         decorator.py        # 项目中用到的装饰器，比如超时处理、解析异常处理
@@ -117,6 +119,7 @@
     page_get/
         __init__.py
         basic.py            # 基本的数据抓取操作
+        status.py           # 微博详情页信息解析模块
         user.py             # 微博用户抓取
     page_parse/
         user/
@@ -127,6 +130,7 @@
         basic.py            # 微博返回内容解析，作用看是否为正常响应
         comment.py          # 评论解析
         home.py             # 用户主页微博数据解析
+        repost.py           # 微博转发信息解析表
         search.py           # 微博搜索结果解析
         status.py           # 微博具体信息
     tasks/
@@ -141,6 +145,9 @@
 
     tests/                  # 一些解析模版，主要在开发解析模块的时候使用
     utils/                  # 工具类
+        __init__.py
+        code_verification.py# 验证码识别相关
+        util_cls.py         # 工具类
     wblogin/
         __init__.py
         login.py          # 微博模拟登陆具体实现
@@ -166,18 +173,17 @@
 果没设置密码，需要关闭保护模式(不推荐，这个**有安全风险**)才能和各个节点通信。如果害怕遇到Redis单点
 故障，可以使用Redis主从配置。
   - 更新：由于部分朋友对redis的配置特别生疏，我专门写了一篇文章，请点击[wiki](https://github.com/ResolveWang/WeiboSpider/wiki/%E5%88%86%E5%B8%83%E5%BC%8F%E7%88%AC%E8%99%AB%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE)查看
-  - 由于**高版本的Celery不支持Windows**,所以请在**类Unix系统**部署。如果实在需要在windows
-上部署的话，可以把Celery版本降为3.1.25: ```pip install celery==3.1.25```，这是
-Celery最后支持的一个windows版本；**特别注意，Windows平台上Celery的定时功能不可用！
-所以如果需要用到定时任务分发的话，请务必将beat部署到linux或者mac上**
 
 - 项目相关配置
-  - 安装相关依赖```pip install -r requirements.txt```
-  - 打开[配置文件](./config/spider.yaml)修改数据库和微博账号相关配置。如果你的账号不是常用地登录
+  - 安装相关依赖```pip install -r requirements.txt```，这里需要注意一点：由于**高版本的Celery不支持Windows**,所以请在**类Unix系统**部署。如果实在需要在windows上部署的话，可以把Celery版本
+  降为3.1.25: ```pip install celery==3.1.25```，这是Celery最后支持的一个windows版本；**特别注意，Windows平台上Celery的定时功能不可用！所以如果需要用到定时任务分发的话，请务必将beat部署到linux或者mac上**.
+  - 对Python虚拟环境了解的朋友可以使用 `source env.sh`，直接创建项目需要的虚拟环境和安装相关依赖。注意如果Python发行版是`anaconda`而非Python官网下载的发行版，那么需要修改`env.sh`文件中的 `pip install virtualenv`
+  为`conda install virtualenv`.虚拟环境默认安装在项目根目录，文件夹是`.env`
+  - 打开[配置文件](./config/spider.yaml)修改数据库相关配置。如果你的账号不是常用地登录
   的话（比如通过淘宝购买），登录会出现验证码，目前本项目通过打码平台进行验证码识别，选择的打码平台
   是[云打码](http://www.yundama.com/)，你需要在[spider.yaml](./config/spider.yaml)中**设置云打码平台你所注册
   的用户名和密码**，一块钱大概可以识别160个验证码。也可以选择别的打码平台，又好用的欢迎推荐 T.T
-  - 打开[sql文件](./config/sql/spider.sql)查看并使用建表语句
+  - 在项目根目录下，运行`python create_all.py`创建该项目需要的表
 
 - 入口文件：如果有同学有**修改源码**的需求，那么建议**从入口文件开始阅读**
   - [login.py](./tasks/login.py)和[login_first.py](login_first.py):PC端微博登陆程序
@@ -186,7 +192,6 @@ Celery最后支持的一个windows版本；**特别注意，Windows平台上Cele
   - [home.py](./tasks/home.py)和[home_first.py](home_first.py):微博用户主页所有微博抓取程序
   - [comment.py](./tasks/comment.py)和[comment_first.py](comment_first.py):微博评论抓取
   - [repost.py](./tasks/repost.py)和[repost_first.py](repost_first.py):转发信息抓取
-  - [login_local.py](login_local.py):单机登陆微博账号脚本
 
 - 基本用法
   - 在分布式节点上启动worker。需要在启动worker的时候**指定分布式节点的queue**,queue的作用是配置节点可以接收什么任务，不可以接收什么任务。
@@ -272,7 +277,8 @@ login_first.py```**获取首次登陆的cookie**，需要注意它只会分发�
 
 ## 如何贡献 :loudspeaker:
 - 如果遇到使用中有什么问题，可以在[issue](https://github.com/ResolveWang/WeiboSpider/issues)中提出来
-- 代码中如果有逻辑不合理或者内容不完善的地方，可以fork后进行修改，然后Pull Request，如果一经采纳，就会将你加入[contributors](https://github.com/ResolveWang/WeiboSpider/graphs/contributors)
+- 代码中如果有逻辑不合理或者内容不完善的地方，可以fork后进行修改，然后Pull Request，如果一经采纳，就会将你加入[contributors](https://github.com/ResolveWang/WeiboSpider/graphs/contributors),
+注意提PR之前，**检查一下代码风格是否符合PEP8**
 - 欢迎在[issue](https://github.com/ResolveWang/WeiboSpider/issues)中提有意义的future
 - 希望有仔细研究过微博反爬虫策略的同学积极提建议
 
@@ -297,7 +303,10 @@ login_first.py```**获取首次登陆的cookie**，需要注意它只会分发�
 ## 致谢:heart:
 - 感谢大神[Ask](https://github.com/ask)的[celery](https://github.com/celery/celery)分布式任务调度框架
 - 感谢大神[kennethreitz](https://github.com/kennethreitz/requests)的[requests](https://github.com/kennethreitz/requests)库
-- 感谢网友 李*、戴** 和 西*弗斯 热心测试和提供建议
-- 感谢网友 sKeletOn、frankfff、大志 捐赠,所有捐款都会贡献部分(20%)给[celery](http://docs.celeryproject.org/en/latest/getting-started/first-steps-with-celery.html),用以支持和鼓励其发展！
+- 感谢提PR和issue的同学
+- 感谢所有捐赠的网友,所有捐款都会贡献部分(20%)给[celery](http://docs.celeryproject.org/en/latest/getting-started/first-steps-with-celery.html),用以支持和鼓励其发展！
 而[requests](http://docs.python-requests.org/en/master/)未提供donate方式，所以目前只能通过[saythanks.io](https://saythanks.io/to/kennethreitz)对其表示谢意。
 - 感谢所有`star`支持的网友
+
+
+最后，祝大家玩得高兴，用得舒心！
