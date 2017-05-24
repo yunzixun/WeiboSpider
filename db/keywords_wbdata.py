@@ -1,6 +1,6 @@
 # -*-coding:utf-8 -*-
 from db.basic_db import db_session
-from db.models import KeywordsWbdata
+from db.wb_django.weibo2.models import KeywordsWbdata
 from decorators.decorator import db_commit_decorator
 
 

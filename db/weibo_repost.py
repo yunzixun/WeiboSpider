@@ -1,6 +1,6 @@
 # coding:utf-8
 from db.basic_db import db_session
-from db.models import WeiboRepost
+from db.wb_django.weibo2.models import WeiboRepost,WeiboData
 from decorators.decorator import db_commit_decorator
 
 
@@ -28,5 +28,7 @@ def get_repost_by_rid(rid):
     """
     return db_session.query(WeiboRepost).filter(WeiboRepost.weibo_id == rid).first()
 
+
 def get_repost_uid():
-    return db_session.query(WeiboRepost.user_id).all()
+    for wb in db_session.query(WeiboData):
+        yield wb.uid

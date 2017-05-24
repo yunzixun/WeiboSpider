@@ -66,7 +66,7 @@ def excute_user_profile_task():
     seeds = get_repost_uid()
     if seeds:
         for seed in seeds:
-            app.send_task('tasks.user.crawl_person_profile_infos', args=seed, queue='user_profile_crawler',
+            app.send_task('tasks.user.crawl_person_profile_infos', args=(seed,), queue='user_profile_crawler',
                           routing_key='or_user_profile_info')
 
 

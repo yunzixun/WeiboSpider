@@ -1,8 +1,10 @@
 import json
+
 from bs4 import BeautifulSoup
-from logger.log import parser
-from db.models import WeiboComment
+
+from db.wb_django.weibo2.models import WeiboComment
 from decorators.decorator import parse_decorator
+from logger.log import parser
 
 
 @parse_decorator(1)

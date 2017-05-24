@@ -1,10 +1,12 @@
 # -*-coding:utf-8 -*-
-import re
 import json
+import re
+
 from bs4 import BeautifulSoup
-from logger.log import parser
-from db.models import WeiboData
+
+from db.wb_django.weibo2.models import WeiboData
 from decorators.decorator import parse_decorator
+from logger.log import parser
 
 
 @parse_decorator(1)

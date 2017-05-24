@@ -1,7 +1,8 @@
 # coding:utf-8
 from sqlalchemy import text
+
 from db.basic_db import db_session
-from db.models import WeiboData, WeiboRepost
+from db.wb_django.weibo2.models import WeiboData, KeywordsWbdata, KeyWords
 from decorators.decorator import db_commit_decorator
 
 
@@ -49,15 +50,23 @@ def get_weibo_comment_not_crawled():
 def get_weibo_repost_not_crawled():
     return db_session.query(WeiboData.weibo_id, WeiboData.uid).filter(text('repost_crawled=0')).all()
 
-def get_weibo_repost_not_full_crawled():
-    wbdata = db_session.query(WeiboData.weibo_id,WeiboData.uid,WeiboData.repost_num).all()
-    res = []
+
+def get_weibo_repost_not_full_crawled(keyword=None):
+    wbdata = db_session.query(WeiboData)
+    if keyword is not None:
+        wbdata =  db_session.query(WeiboData,KeyWords,KeywordsWbdata)\
+            .filter(KeywordsWbdata.wb_id == WeiboData.weibo_id) \
+            .filter(KeyWords.id == KeywordsWbdata.keyword_id) \
+            .filter(KeyWords.keyword == keyword)
+    wbdata = wbdata.filter(
+        WeiboData.repost_crawled == 0)
+
     for wb in wbdata:
-        hasc = db_session.query(WeiboRepost).filter(WeiboRepost.root_weibo_id==wb.weibo_id).count()
-        if wb.repost_num>100:
-            if hasc/wb.repost_num<0.8:
-                res.append(wb)
-    return res
+        # if wb.repost_num > 100:
+        # hasc = db_session.query(WeiboRepost).filter(WeiboRepost.root_weibo_id == wb.weibo_id).count()
+        # if hasc / wb.repost_num < 0.8:
+        yield wb
+
 
 @db_commit_decorator
 def set_weibo_repost_crawled(mid):

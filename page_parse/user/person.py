@@ -3,9 +3,9 @@
 from bs4 import BeautifulSoup
 
 from db.user import save_user
-from page_parse.user import public
+from db.wb_django.weibo2.models import User
 from decorators.decorator import parse_decorator
-from db.models import User
+from page_parse.user import public
 
 
 @parse_decorator(0)

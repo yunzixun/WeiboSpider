@@ -1,13 +1,12 @@
 import json
+
 from bs4 import BeautifulSoup
 from bs4 import NavigableString
 
-from db.user import get_user_by_uid
-from logger.log import parser
-from db.models import WeiboRepost
 from db.redis_db import IdNames
+from db.wb_django.weibo2.models import WeiboRepost
 from decorators.decorator import parse_decorator
-from page_parse.user.person import simple_save_user_info
+from logger.log import parser
 
 repost_url = 'http://weibo.com{}'
 
