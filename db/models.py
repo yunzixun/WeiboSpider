@@ -93,6 +93,7 @@ class WeiboComment(Base):
     user_id = Column(String(20))
     create_time = Column(String(200))
     like = Column(INTEGER, default=0)
+    sub_comment_count = Column(INTEGER,default=0)
 
     def __repr__(self):
         return 'weibo_id:{},comment_id:{},comment_cont:{}'.format(self.weibo_id, self.comment_id, self.comment_cont)

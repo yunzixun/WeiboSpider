@@ -5,7 +5,7 @@ from sqlalchemy import desc
 sys.path.append('/'.join(sys.path[0].split('/')[:-1]))
 
 from db.basic_db import db_session
-from db.models import WeiboData, KeyWords, KeywordsWbdata, User, WeiboRepost
+from db.models import WeiboData, KeyWords, KeywordsWbdata, User, WeiboRepost, WeiboComment
 import xlwt
 from datetime import datetime
 
@@ -45,6 +45,18 @@ for i in range(1, 11):
     keyindex['转发数{}'.format(i)] = user_start + 5 + (i - 1) * count + i
     keyindex['转发时间{}'.format(i)] = user_start + 6 + (i - 1) * count + i
 
+user_start = len(keyindex)
+for i in range(1, 11):
+    count = 8
+    keyindex['昵称{}'.format(i)] = user_start + (i - 1) * count + i
+    keyindex['粉丝数{}'.format(i)] = user_start + 1 + (i - 1) * count + i
+    keyindex['认证类型{}'.format(i)] = user_start + 2 + (i - 1) * count + i
+    keyindex['微博数{}'.format(i)] = user_start + 3 + (i - 1) * count + i
+    keyindex['等级{}'.format(i)] = user_start + 4 + (i - 1) * count + i
+    keyindex['次级评论数{}'.format(i)] = user_start + 5 + (i - 1) * count + i
+    keyindex['点赞数{}'.format(i)] = user_start + 6 + (i - 1) * count + i
+    keyindex['内容{}'.format(i)] = user_start + 7 + (i - 1) * count + i
+
 
 def build_init_sheet(ws):
     for k, v in keyindex.items():
@@ -67,17 +79,8 @@ def time_difference(last, before):
     last = datetime.strptime(last, '%Y-%m-%d %H:%M')
     before = datetime.strptime(before, '%Y-%m-%d %H:%M')
     diff = (last - before).seconds
-    res = str(diff % 60) + '秒'
     diff //= 60
-    if diff > 0:
-        res = str(diff % 60) + '分' + res
-    diff //= 60
-    if diff > 0:
-        res = str(diff % 24) + '小时' + res
-    diff //= 24
-    if diff > 0:
-        res = str(diff) + '天' + res
-    return res
+    return str(diff) + '分'
 
 
 def get_repost_count_by_user(wbid, user_id):
@@ -153,8 +156,27 @@ def build_one(keyword, wb, ws):
         ws.write(line_num, keyindex['等级{}'.format(i)], repost_user.level)
         ws.write(line_num, keyindex['转发数{}'.format(i)], keyrepost.repost_count)
         ws.write(line_num, keyindex['转发时间{}'.format(i)], time_difference(keyrepost.repost_time, wb.create_time))
+        i += 1
+
+    i = 1
+    for keycomment in db_session.query(WeiboComment).filter(
+                    WeiboComment.weibo_id== wb.weibo_id).order_by(
+        desc(WeiboComment.like))[:10]:
+        comment_user = db_session.query(User).filter(User.uid == keycomment.user_id).one()
+        ws.write(line_num, keyindex['昵称{}'.format(i)], comment_user.name)
+        ws.write(line_num, keyindex['粉丝数{}'.format(i)], comment_user.fans_num)
+        ws.write(line_num, keyindex['认证类型{}'.format(i)], comment_user.verify_type)
+        ws.write(line_num, keyindex['微博数{}'.format(i)], comment_user.wb_num)
+        ws.write(line_num, keyindex['等级{}'.format(i)], comment_user.level)
+
+        keyindex['内容{}'.format(i)] = user_start + 7 + (i - 1) * count + i
+
+        ws.write(line_num, keyindex['次级评论数{}'.format(i)], keycomment.sub_comment_count)
+        ws.write(line_num, keyindex['点赞数{}'.format(i)], keycomment.like)
+        ws.write(line_num, keyindex['内容{}'.format(i)], keycomment.comment_cont)
 
         i += 1
+
     global finish_count
     finish_count += 1
     print('{}行完成'.format(finish_count))
