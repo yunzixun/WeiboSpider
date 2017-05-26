@@ -5,7 +5,7 @@ from sqlalchemy import desc
 sys.path.append('/'.join(sys.path[0].split('/')[:-1]))
 
 from db.basic_db import db_session
-from db.wb_django.weibo2.models import WeiboData, KeyWords, KeywordsWbdata, User, WeiboRepost
+from db.models import WeiboData, KeyWords, KeywordsWbdata, User, WeiboRepost
 import xlwt
 from datetime import datetime
 

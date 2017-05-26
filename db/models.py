@@ -11,6 +11,7 @@ class LoginInfo(Base):
     password = Column(String(200))
     enable = Column(INTEGER, default=1)
     need_verify = Column(INTEGER, default=1)
+    account_type = Column(INTEGER, default=1)  # 账号的类型
 
 
 class User(Base):
@@ -113,11 +114,8 @@ class WeiboRepost(Base):
     like = Column(INTEGER)
     repost_count = Column(INTEGER)
 
-
     def __repr__(self):
         return 'id:{},user_id:{},user_name:{},parent_user_id:{},parent_user_name:{}, weibo_url:{},weibo_id:{},' \
                'repost_time:{},repost_cont:{}'.format(self.id, self.user_id, self.user_name, self.parent_user_id,
                                                       self.parent_user_name, self.weibo_url, self.weibo_id,
                                                       self.repost_time, self.repost_cont)
-
-
