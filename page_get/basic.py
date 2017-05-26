@@ -21,6 +21,7 @@ excp_interal = get_excp_interal()
 
 # 每次抓取都从redis中随机取一个cookie以降低被封号的危险，但是还没验证不同ip对账号的影响
 
+
 # @timeout(200)
 # @timeout_decorator
 def get_page(url, user_verify=True, need_login=True):
@@ -83,11 +84,12 @@ def get_page(url, user_verify=True, need_login=True):
                     # 功能锁定,可能是优先级较高的任务无法执行或者账号被封，建议login_info表增加一个账号质量的字段
                     freeze_account(name_cookies[0], -1)
                     Cookies.delete_cookies(name_cookies[0])
+                    count += 1
                     continue
 
-                # if not is_complete(page):
-                #    count += 1
-                #    continue
+                if not is_complete(page):
+                    count += 1
+                    continue
 
                 if is_404(page):
                     crawler.warning('url为{url}的连接不存在'.format(url=url))

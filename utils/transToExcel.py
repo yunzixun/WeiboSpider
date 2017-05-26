@@ -2,6 +2,8 @@ import sys
 
 from sqlalchemy import desc
 
+from page_get.user import get_profile
+
 sys.path.append('/'.join(sys.path[0].split('/')[:-1]))
 
 from db.basic_db import db_session
@@ -36,7 +38,7 @@ for i, k in enumerate(keys):
     keyindex[k] = i
 
 for i in range(1, 11):
-    count = 7
+    count = 6
     keyindex['昵称{}'.format(i)] = user_start + (i - 1) * count + i
     keyindex['粉丝数{}'.format(i)] = user_start + 1 + (i - 1) * count + i
     keyindex['认证类型{}'.format(i)] = user_start + 2 + (i - 1) * count + i
@@ -47,15 +49,15 @@ for i in range(1, 11):
 
 user_start = len(keyindex)
 for i in range(1, 11):
-    count = 8
-    keyindex['昵称{}'.format(i)] = user_start + (i - 1) * count + i
-    keyindex['粉丝数{}'.format(i)] = user_start + 1 + (i - 1) * count + i
-    keyindex['认证类型{}'.format(i)] = user_start + 2 + (i - 1) * count + i
-    keyindex['微博数{}'.format(i)] = user_start + 3 + (i - 1) * count + i
-    keyindex['等级{}'.format(i)] = user_start + 4 + (i - 1) * count + i
-    keyindex['次级评论数{}'.format(i)] = user_start + 5 + (i - 1) * count + i
-    keyindex['点赞数{}'.format(i)] = user_start + 6 + (i - 1) * count + i
-    keyindex['内容{}'.format(i)] = user_start + 7 + (i - 1) * count + i
+    count = 6
+    keyindex['c昵称{}'.format(i)] = user_start + (i - 1) * count + i
+    keyindex['c粉丝数{}'.format(i)] = user_start + 1 + (i - 1) * count + i
+    keyindex['c认证类型{}'.format(i)] = user_start + 2 + (i - 1) * count + i
+    keyindex['c微博数{}'.format(i)] = user_start + 3 + (i - 1) * count + i
+    keyindex['c等级{}'.format(i)] = user_start + 4 + (i - 1) * count + i
+    # keyindex['次级评论数{}'.format(i)] = user_start + 5 + (i - 1) * count + i
+    keyindex['c内容{}'.format(i)] = user_start + 5 + (i - 1) * count + i
+    keyindex['c点赞数{}'.format(i)] = user_start + 6 + (i - 1) * count + i
 
 
 def build_init_sheet(ws):
@@ -148,7 +150,8 @@ def build_one(keyword, wb, ws):
     for keyrepost in db_session.query(WeiboRepost).filter(
                     WeiboRepost.root_weibo_id == wb.weibo_id).order_by(
         desc(WeiboRepost.repost_count))[:10]:
-        repost_user = db_session.query(User).filter(User.uid == keyrepost.user_id).one()
+        repost_user = get_profile(WeiboRepost.user_id)
+
         ws.write(line_num, keyindex['昵称{}'.format(i)], repost_user.name)
         ws.write(line_num, keyindex['粉丝数{}'.format(i)], repost_user.fans_num)
         ws.write(line_num, keyindex['认证类型{}'.format(i)], repost_user.verify_type)
@@ -160,21 +163,18 @@ def build_one(keyword, wb, ws):
 
     i = 1
     for keycomment in db_session.query(WeiboComment).filter(
-                    WeiboComment.weibo_id== wb.weibo_id).order_by(
+                    WeiboComment.weibo_id == wb.weibo_id).order_by(
         desc(WeiboComment.like))[:10]:
         comment_user = db_session.query(User).filter(User.uid == keycomment.user_id).one()
-        ws.write(line_num, keyindex['昵称{}'.format(i)], comment_user.name)
-        ws.write(line_num, keyindex['粉丝数{}'.format(i)], comment_user.fans_num)
-        ws.write(line_num, keyindex['认证类型{}'.format(i)], comment_user.verify_type)
-        ws.write(line_num, keyindex['微博数{}'.format(i)], comment_user.wb_num)
-        ws.write(line_num, keyindex['等级{}'.format(i)], comment_user.level)
+        ws.write(line_num, keyindex['c昵称{}'.format(i)], comment_user.name)
+        ws.write(line_num, keyindex['c粉丝数{}'.format(i)], comment_user.fans_num)
+        ws.write(line_num, keyindex['c认证类型{}'.format(i)], comment_user.verify_type)
+        ws.write(line_num, keyindex['c微博数{}'.format(i)], comment_user.wb_num)
+        ws.write(line_num, keyindex['c等级{}'.format(i)], comment_user.level)
 
-        keyindex['内容{}'.format(i)] = user_start + 7 + (i - 1) * count + i
-
-        ws.write(line_num, keyindex['次级评论数{}'.format(i)], keycomment.sub_comment_count)
-        ws.write(line_num, keyindex['点赞数{}'.format(i)], keycomment.like)
-        ws.write(line_num, keyindex['内容{}'.format(i)], keycomment.comment_cont)
-
+        # ws.write(line_num, keyindex['次级评论数{}'.format(i)], keycomment.sub_comment_count)
+        ws.write(line_num, keyindex['c点赞数{}'.format(i)], keycomment.like)
+        ws.write(line_num, keyindex['c内容{}'.format(i)], keycomment.comment_cont)
         i += 1
 
     global finish_count

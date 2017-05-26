@@ -18,7 +18,7 @@ base_url = 'http://weibo.com/aj/v6/comment/big?ajwvr=6&id={}&page={}&__rnd={}'
 def crawl_comment_by_page(mid, page_num):
     cur_time = int(time.time() * 1000)
     cur_url = base_url.format(mid, page_num, cur_time)
-    html = get_page(cur_url, user_verify=True)
+    html = get_page(cur_url, need_login=False,user_verify=False)
     comment_datas = comment.get_comment_list(html, mid)
     for cm in comment_datas:
         get_profile(cm.user_id)
