@@ -2,8 +2,8 @@
 # 个人用户个人资料页
 from bs4 import BeautifulSoup
 
+from db.models import User
 from db.user import save_user
-from db.wb_django.weibo2.models import User
 from decorators.decorator import parse_decorator
 from page_parse.user import public
 

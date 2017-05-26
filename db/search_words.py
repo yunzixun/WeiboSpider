@@ -2,7 +2,7 @@
 from sqlalchemy import text
 
 from db.basic_db import db_session
-from db.wb_django.weibo2.models import KeyWords
+from db.models import KeyWords
 from decorators.decorator import db_commit_decorator
 
 

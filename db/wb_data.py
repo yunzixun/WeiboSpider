@@ -2,7 +2,7 @@
 from sqlalchemy import text
 
 from db.basic_db import db_session
-from db.wb_django.weibo2.models import WeiboData, KeywordsWbdata, KeyWords
+from db.models import WeiboData, KeywordsWbdata, KeyWords
 from decorators.decorator import db_commit_decorator
 
 
@@ -89,3 +89,6 @@ def check_weibo_repost_crawled(mid):
 def check_weibo_comment_crawled(mid):
     wbdt = db_session.query(WeiboData).filter(WeiboData.weibo_id == mid).one()
     return wbdt.comment_crawled == '1'
+
+def get_wbdata_uid():
+    return db_session.query(WeiboData.uid)

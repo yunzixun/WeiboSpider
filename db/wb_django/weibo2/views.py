@@ -7,4 +7,5 @@ def index(request):
 
 def tendency(request):
     # 返回趋势
+    keyword = request.GET.get('keyword','')
     return None

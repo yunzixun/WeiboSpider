@@ -26,6 +26,7 @@ redis:
     host: r-wz975448b533b1f4.redis.rds.aliyuncs.com
     port: 6379
     password: 923sdd2ucMw
+    share_host_count: 5
     cookies: 1 # 登录需要使用的cookies
     urls: 2 # 抓取过的url
     broker: 5 # celery的broker

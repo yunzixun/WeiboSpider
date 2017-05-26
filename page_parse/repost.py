@@ -3,8 +3,8 @@ import json
 from bs4 import BeautifulSoup
 from bs4 import NavigableString
 
+from db.models import WeiboRepost
 from db.redis_db import IdNames
-from db.wb_django.weibo2.models import WeiboRepost
 from decorators.decorator import parse_decorator
 from logger.log import parser
 

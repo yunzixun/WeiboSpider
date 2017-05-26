@@ -23,13 +23,7 @@ def crawl_repost_by_page(mid, page_num, uid):
 
     for repost_obj in repost_datas:
         get_profile(repost_obj.user_id)
-        user_id = IdNames.fetch_uid_by_name(repost_obj.parent_user_name)
-        if not user_id:
-            # 设置成根用户的uid和用户名
-            repost_obj.parent_user_id = root_user.uid
-            repost_obj.parent_user_name = root_user.name
-        else:
-            repost_obj.parent_user_id = user_id
+
 
     weibo_repost.save_reposts(repost_datas)
 

@@ -3,7 +3,7 @@ import re
 
 from bs4 import BeautifulSoup
 
-from db.wb_django.weibo2.models import WeiboData
+from db.models import WeiboData
 from decorators.decorator import parse_decorator
 from logger.log import parser
 

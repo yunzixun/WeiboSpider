@@ -1,7 +1,9 @@
 # coding:utf-8
 import time
+
 from db import wb_data
 from logger.log import crawler
+from page_get.user import get_profile
 from tasks.workers import app
 from page_parse import comment
 from config import conf
@@ -16,8 +18,11 @@ base_url = 'http://weibo.com/aj/v6/comment/big?ajwvr=6&id={}&page={}&__rnd={}'
 def crawl_comment_by_page(mid, page_num):
     cur_time = int(time.time() * 1000)
     cur_url = base_url.format(mid, page_num, cur_time)
-    html = get_page(cur_url, user_verify=False)
+    html = get_page(cur_url, user_verify=True)
     comment_datas = comment.get_comment_list(html, mid)
+    for cm in comment_datas:
+        get_profile(cm.user_id)
+
     save_comments(comment_datas)
     return html
 

@@ -2,7 +2,7 @@
 from sqlalchemy import text
 
 from db.basic_db import db_session
-from db.wb_django.weibo2.models import LoginInfo
+from db.models import LoginInfo
 from decorators.decorator import db_commit_decorator
 
 

@@ -37,6 +37,7 @@ def crawl_person_infos(uid):
     app.send_task('tasks.user.crawl_follower_fans', args=(uid,), queue='fans_followers',
                   routing_key='for_fans_followers')
 
+
 @app.task(ignore_result=True)
 def crawl_person_profile_infos(uid):
     """
@@ -47,8 +48,6 @@ def crawl_person_profile_infos(uid):
     if not uid:
         return
     user_get.get_profile(uid)
-
-
 
 
 @app.task(ignore_result=True)
@@ -68,5 +67,15 @@ def excute_user_profile_task():
         for seed in seeds:
             app.send_task('tasks.user.crawl_person_profile_infos', args=(seed,), queue='user_profile_crawler',
                           routing_key='or_user_profile_info')
-
-
+    from db.wb_data import get_wbdata_uid
+    seeds = get_wbdata_uid()
+    if seeds:
+        for seed in seeds:
+            app.send_task('tasks.user.crawl_person_profile_infos', args=(seed,), queue='user_profile_crawler',
+                          routing_key='or_user_profile_info')
+    from db.weibo_comment import get_comment_uid
+    seeds = get_comment_uid()
+    if seeds:
+        for seed in seeds:
+            app.send_task('tasks.user.crawl_person_profile_infos', args=(seed,), queue='user_profile_crawler',
+                          routing_key='or_user_profile_info')

@@ -38,7 +38,10 @@ def get_page(url, user_verify=True, need_login=True):
         if need_login:
             # 每次重试的时候都换cookies,并且和上次不同
             crawler.info('阻塞获取cookies')
-            name_cookies = Cookies.fetch_cookies()
+            try:
+                name_cookies = Cookies.fetch_cookies()
+            except Exception as e:
+                print(e)
             crawler.info('获取cookies成功')
 
             if name_cookies is None:

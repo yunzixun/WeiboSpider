@@ -1,8 +1,9 @@
 import json
+import re
 
 from bs4 import BeautifulSoup
 
-from db.wb_django.weibo2.models import WeiboComment
+from db.models import WeiboComment
 from decorators.decorator import parse_decorator
 from logger.log import parser
 
@@ -71,6 +72,15 @@ def get_comment_list(html, wb_id):
             # TODO 将wb_comment.user_id加入待爬队列（seed_ids）
             wb_comment.user_id = comment.find(attrs={'class': 'WB_text'}).find('a').get('usercard')[3:]
             # todo 日期格式化
+            like = comment.find(attrs={'node-type': "like_status"}).find_all('em')[1].text
+            if like == '赞':
+                wb_comment.like = 0
+            else:
+                wb_comment.like = int(like)
+            subcomment = comment.find(attrs={'action-type': 'click_more_child_comment_big'})
+            if subcomment:
+                subcomment = re.match('共(.*)条回复', subcomment.text)
+                wb_comment.sub_comment_count = int(subcomment.group())
             wb_comment.create_time = comment.find(attrs={'class': 'WB_from S_txt2'}).text
             wb_comment.weibo_id = wb_id
         except Exception as e:

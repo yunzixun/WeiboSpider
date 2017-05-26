@@ -1,6 +1,6 @@
 # coding:utf-8
 from db.basic_db import db_session
-from db.wb_django.weibo2.models import WeiboComment
+from db.models import WeiboComment
 from decorators.decorator import db_commit_decorator
 
 
@@ -21,3 +21,6 @@ def save_comment(comment):
 
 def get_comment_by_id(cid):
     return db_session.query(WeiboComment).filter(WeiboComment.comment_id == cid).first()
+
+def get_comment_uid():
+    return db_session.query(WeiboComment.user_id)
