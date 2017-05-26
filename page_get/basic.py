@@ -85,9 +85,9 @@ def get_page(url, user_verify=True, need_login=True):
                     Cookies.delete_cookies(name_cookies[0])
                     continue
 
-                if not is_complete(page):
-                    count += 1
-                    continue
+                # if not is_complete(page):
+                #    count += 1
+                #    continue
 
                 if is_404(page):
                     crawler.warning('url为{url}的连接不存在'.format(url=url))
