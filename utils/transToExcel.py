@@ -9,36 +9,41 @@ from db.wb_django.weibo2.models import WeiboData, KeyWords, KeywordsWbdata, User
 import xlwt
 from datetime import datetime
 
-keyindex = {'序号': 0,
-            '事件名': 1,
-            '事件类型': 2,
-            '微博名称': 3,
-            '特征': 4,
-            '微博属性': 5,
-            '粉丝拥有量': 6,
-            '网址': 7,
-            '发布时间': 8,
-            '转发数': 9,
-            '情感值': 10,
-            '第一层转发': 11,
-            '第二层转发': 12,
-            '第三层转发': 13,
-            '第四层转发': 14,
-            '四层以上转发': 15,
-            '普通用户数量': 16,
-            '个人认证占比': 17,
-            '机构认证占比': 18,
-            '一层占比': 19, }
+keys = ['序号',
+        '事件名',
+        '事件类型',
+        '微博内容',
+        '微博名称',
+        '特征',
+        '微博属性',
+        '粉丝拥有量',
+        '网址',
+        '发布时间',
+        '转发数',
+        '情感值',
+        '第一层转发',
+        '第二层转发',
+        '第三层转发',
+        '第四层转发',
+        '四层以上转发',
+        '普通用户数量',
+        '个人认证占比',
+        '机构认证占比',
+        ]
+keyindex = {}
+user_start = len(keys)
+for i, k in enumerate(keys):
+    keyindex[k] = i
 
 for i in range(1, 11):
     count = 7
-    keyindex['昵称{}'.format(i)] = 19 + (i - 1) * count + i
-    keyindex['粉丝数{}'.format(i)] = 20 + (i - 1) * count + i
-    keyindex['认证类型{}'.format(i)] = 21 + (i - 1) * count + i
-    keyindex['微博数{}'.format(i)] = 22 + (i - 1) * count + i
-    keyindex['等级{}'.format(i)] = 23 + (i - 1) * count + i
-    keyindex['转发数{}'.format(i)] = 24 + (i - 1) * count + i
-    keyindex['转发时间{}'.format(i)] = 25 + (i - 1) * count + i
+    keyindex['昵称{}'.format(i)] = user_start + (i - 1) * count + i
+    keyindex['粉丝数{}'.format(i)] = user_start + 1 + (i - 1) * count + i
+    keyindex['认证类型{}'.format(i)] = user_start + 2 + (i - 1) * count + i
+    keyindex['微博数{}'.format(i)] = user_start + 3 + (i - 1) * count + i
+    keyindex['等级{}'.format(i)] = user_start + 4 + (i - 1) * count + i
+    keyindex['转发数{}'.format(i)] = user_start + 5 + (i - 1) * count + i
+    keyindex['转发时间{}'.format(i)] = user_start + 6 + (i - 1) * count + i
 
 
 def build_init_sheet(ws):
@@ -87,12 +92,16 @@ finish_count = 0
 def main():
     workbook = xlwt.Workbook()
     ws = build_init_sheet(workbook.add_sheet('统计'))
-    keywords = db_session.query(KeyWords)# .filter(KeyWords.keyword == '曼彻斯特爆炸')
+    keywords = db_session.query(KeyWords)  # .filter(KeyWords.keyword == '曼彻斯特爆炸')
     for keyword in keywords:
         for wbid in db_session.query(KeywordsWbdata.wb_id).filter(KeywordsWbdata.keyword_id == keyword.id):
             for wb in db_session.query(WeiboData).filter(WeiboData.weibo_id == wbid[0]):
                 build_one(keyword, wb, ws)
     workbook.save('result.xls')
+
+
+def percent(a, b):
+    return int(a / b * 10000) / 100 if b else 0
 
 
 def build_one(keyword, wb, ws):
@@ -116,22 +125,22 @@ def build_one(keyword, wb, ws):
     print('{}行开始统计'.format(line_num))
     ws.write(line_num, keyindex['序号'], line_num)
     ws.write(line_num, keyindex['事件名'], keyword.keyword)
+    ws.write(line_num, keyindex['微博内容'], wb.weibo_cont)
     ws.write(line_num, keyindex['微博名称'], user.name)
     ws.write(line_num, keyindex['粉丝拥有量'], user.fans_num)
     ws.write(line_num, keyindex['网址'], wb.weibo_url)
     ws.write(line_num, keyindex['发布时间'], wb.create_time)
     ws.write(line_num, keyindex['微博属性'], user.verify_type)
     # 转转发统计
-    ws.write(line_num, keyindex['第一层转发'], lv1)
-    ws.write(line_num, keyindex['第二层转发'], lv2)
-    ws.write(line_num, keyindex['第三层转发'], lv3)
-    ws.write(line_num, keyindex['第四层转发'], lv4)
-    ws.write(line_num, keyindex['四层以上转发'], lv5)
+    ws.write(line_num, keyindex['第一层转发'], percent(lv1, all_repost))
+    ws.write(line_num, keyindex['第二层转发'], percent(lv2, all_repost))
+    ws.write(line_num, keyindex['第三层转发'], percent(lv3, all_repost))
+    ws.write(line_num, keyindex['第四层转发'], percent(lv4, all_repost))
+    ws.write(line_num, keyindex['四层以上转发'], percent(lv5, all_repost))
     ws.write(line_num, keyindex['转发数'], all_repost)
     ws.write(line_num, keyindex['普通用户数量'], get_repost_user_count(wb.weibo_id, 0))
     ws.write(line_num, keyindex['个人认证占比'], get_repost_user_count(wb.weibo_id, 1))
     ws.write(line_num, keyindex['机构认证占比'], get_repost_user_count(wb.weibo_id, 2))
-    ws.write(line_num, keyindex['一层占比'], (int((10000 * lv1 / (all_repost))) / 100) if all_repost > 0 else 0)
     i = 1
     for keyrepost in db_session.query(WeiboRepost).filter(
                     WeiboRepost.root_weibo_id == wb.weibo_id).order_by(
