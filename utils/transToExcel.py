@@ -1,10 +1,10 @@
 import sys
 
+sys.path.append('/'.join(sys.path[0].split('/')[:-1]))
+
 from sqlalchemy import desc
 
 from page_get.user import get_profile
-
-sys.path.append('/'.join(sys.path[0].split('/')[:-1]))
 
 from db.basic_db import db_session
 from db.models import WeiboData, KeyWords, KeywordsWbdata, User, WeiboRepost, WeiboComment
