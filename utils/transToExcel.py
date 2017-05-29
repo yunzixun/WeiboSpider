@@ -64,7 +64,7 @@ def build_init_sheet(ws):
     for k, v in keyindex.items():
         ws.write(0, v, k)
     return ws
-
+    
 
 def get_repost_user_count(wbid, verify_type):
     return db_session.query(WeiboRepost).join(User, User.uid == WeiboRepost.user_id).filter(
