@@ -150,7 +150,7 @@ def build_one(keyword, wb, ws):
     for keyrepost in db_session.query(WeiboRepost).filter(
                     WeiboRepost.root_weibo_id == wb.weibo_id).order_by(
         desc(WeiboRepost.repost_count))[:10]:
-        repost_user = get_profile(WeiboRepost.user_id)
+        repost_user = get_profile(keyrepost.user_id)
 
         ws.write(line_num, keyindex['昵称{}'.format(i)], repost_user.name)
         ws.write(line_num, keyindex['粉丝数{}'.format(i)], repost_user.fans_num)
