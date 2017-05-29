@@ -56,8 +56,8 @@ for i in range(1, 11):
     keyindex['c微博数{}'.format(i)] = user_start + 3 + (i - 1) * count + i
     keyindex['c等级{}'.format(i)] = user_start + 4 + (i - 1) * count + i
     # keyindex['次级评论数{}'.format(i)] = user_start + 5 + (i - 1) * count + i
-    keyindex['c内容{}'.format(i)] = user_start + 5 + (i - 1) * count + i
-    keyindex['c点赞数{}'.format(i)] = user_start + 6 + (i - 1) * count + i
+    keyindex['c内容{}'.format(i)] = user_start + 6 + (i - 1) * count + i
+    keyindex['c点赞数{}'.format(i)] = user_start + 5 + (i - 1) * count + i
 
 
 def build_init_sheet(ws):
